@@ -29,8 +29,19 @@ async function run() {
                .collection("allFoods");
           // allFoods api
           app.get("/allFoods", async (req, res) => {
-               const result = await foodCollection.find().toArray();
+               const page = parseInt(req.query.page);
+               const size = parseInt(req.query.size);
+               console.log(page, size);
+               const result = await foodCollection
+                    .find()
+                    .skip(page * size)
+                    .limit(size)
+                    .toArray();
                res.send(result);
+          });
+          app.get("/allFoodsCount", async (req, res) => {
+               const count = await foodCollection.estimatedDocumentCount();
+               res.send({ count });
           });
           app.get("/allFoods/:id", async (req, res) => {
                const id = req.params.id;
