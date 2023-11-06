@@ -60,6 +60,12 @@ async function run() {
           });
 
           // purchased food
+          app.get("/purchasedFoods", async (req, res) => {
+               const cursor = purchasedFoodCollection.find();
+               const result = await cursor.toArray();
+               console.log(result);
+               res.send(result);
+          });
           app.post("/purchasedFoods", async (req, res) => {
                const allData = req.body;
                console.log(allData);
