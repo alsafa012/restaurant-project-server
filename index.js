@@ -23,11 +23,18 @@ async function run() {
      try {
           // Connect the client to the server	(optional starting in v4.7)
           await client.connect();
-
           const foodCollection = client
                .db("restaurantDB")
                .collection("allFoods");
+
+          const purchasedFoodCollection = client
+               .db("restaurantDB")
+               .collection("purchasedFoods");
           // allFoods api
+          app.get("/allFoodsCount", async (req, res) => {
+               const count = await foodCollection.estimatedDocumentCount();
+               res.send({ count });
+          });
           app.get("/allFoods", async (req, res) => {
                const page = parseInt(req.query.page);
                const size = parseInt(req.query.size);
@@ -38,10 +45,6 @@ async function run() {
                     .limit(size)
                     .toArray();
                res.send(result);
-          });
-          app.get("/allFoodsCount", async (req, res) => {
-               const count = await foodCollection.estimatedDocumentCount();
-               res.send({ count });
           });
           app.get("/allFoods/:id", async (req, res) => {
                const id = req.params.id;
@@ -55,7 +58,15 @@ async function run() {
                const result = await foodCollection.insertOne(addedItems);
                res.send(result);
           });
-       
+
+          // purchased food
+          app.post("/purchasedFoods", async (req, res) => {
+               const allData = req.body;
+               console.log(allData);
+               const result = await purchasedFoodCollection.insertOne(allData);
+               res.send(result);
+          });
+
           // Send a ping to confirm a successful connection
           await client.db("admin").command({ ping: 1 });
           console.log(
