@@ -1,5 +1,7 @@
 const express = require("express");
 const cors = require("cors");
+const jwt = require("jsonwebtoken");
+const cookieParser = require("cookie-parser");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
 const app = express();
@@ -10,12 +12,14 @@ app.use(
           origin: [
                "https://restaurant-project-d2dc8.web.app",
                "http://localhost:5173",
-               "https://restaurant-project-d2dc8.firebaseapp.com/"
+               "https://restaurant-project-d2dc8.firebaseapp.com",
+               "http://localhost:5000",
           ],
           credentials: true,
      })
 );
 app.use(express.json());
+app.use(cookieParser());
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.pz6rkt0.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -28,6 +32,23 @@ const client = new MongoClient(uri, {
      },
 });
 
+// my created middleware
+const verifyToken = async (req, res, next) => {
+     const token = req.cookies?.token;
+     console.log("verified token", token);
+     if (!token) {
+          return res.status(401).send({ message: "unauthorized" });
+     }
+     jwt.verify(token, process.env.ACCESS_TOKEN, (err, decoded) => {
+          if (err) {
+               return res.status(401).send({ message: "unauthorized" });
+          }
+          console.log("value in the token", decoded);
+          req.user = decoded;
+          next();
+     });
+};
+
 async function run() {
      try {
           // Connect the client to the server	(optional starting in v4.7)
@@ -39,9 +60,26 @@ async function run() {
           const purchasedFoodCollection = client
                .db("restaurantDB")
                .collection("purchasedFoods");
-          const userCollection = client
-               .db("restaurantDB")
-               .collection("users");
+          const userCollection = client.db("restaurantDB").collection("users");
+
+          // jwt authorization
+          app.post("/jwt", async (req, res) => {
+               const user = req.body;
+               console.log("logged user", user);
+               const token = jwt.sign(user, process.env.ACCESS_TOKEN, {
+                    expiresIn: "1hr",
+               });
+               res.cookie("token", token, {
+                    httpOnly: true,
+                    secure: true,
+                    sameSite: "none",
+               }).send({ message: "success" });
+          });
+          app.post("/logout", async (req, res) => {
+               const user = req.body;
+               console.log("logout user", user);
+               res.clearCookie("token", { maxAge: 0 }).send({ success: true });
+          });
 
           // users api
 
@@ -57,16 +95,12 @@ async function run() {
                res.send(result);
           });
 
-
-
-
-
           // allFoods api
           app.get("/allFoodsCount", async (req, res) => {
                const count = await foodCollection.estimatedDocumentCount();
                res.send({ count });
           });
-          app.get("/allFoods", async (req, res) => {
+          app.get("/allFoods",verifyToken, async (req, res) => {
                const page = parseInt(req.query.page);
                const size = parseInt(req.query.size);
                // console.log(page, size);
@@ -115,7 +149,17 @@ async function run() {
           });
 
           // purchased food
-          app.get("/purchasedFoods", async (req, res) => {
+          app.get("/purchasedFoods", verifyToken , async (req, res) => {
+               console.log("email", req.query?.email);
+               console.log("cookies", req.cookies);
+               console.log(req.user);
+               // console.log("user from valid token", req.user);
+               // console.log("token", req.cookies?.token);
+               if (req.query?.email !== req.user.email) {
+                    return res
+                         .status(403)
+                         .send({ message: "forbidden access" });
+               }
                let query = {};
                if (req.query?.email) {
                     query = { email: req.query.email };
