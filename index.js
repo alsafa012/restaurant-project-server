@@ -5,7 +5,12 @@ require("dotenv").config();
 const app = express();
 const port = process.env.PORT || 5000;
 // middleware
-app.use(cors());
+app.use(
+     cors({
+          origin: ["http://localhost:5173"],
+          credentials: true,
+     })
+);
 app.use(express.json());
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.pz6rkt0.mongodb.net/?retryWrites=true&w=majority`;
@@ -61,9 +66,14 @@ async function run() {
 
           // purchased food
           app.get("/purchasedFoods", async (req, res) => {
-               const cursor = purchasedFoodCollection.find();
-               const result = await cursor.toArray();
-               console.log(result);
+               let query = {};
+               if (req.query?.email) {
+                    query = { email: req.query.email };
+               }
+               const result = await purchasedFoodCollection
+                    .find(query)
+                    .toArray();
+
                res.send(result);
           });
           app.post("/purchasedFoods", async (req, res) => {
