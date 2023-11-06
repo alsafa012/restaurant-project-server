@@ -31,7 +31,7 @@ async function run() {
           app.get("/allFoods", async (req, res) => {
                const page = parseInt(req.query.page);
                const size = parseInt(req.query.size);
-               console.log(page, size);
+               // console.log(page, size);
                const result = await foodCollection
                     .find()
                     .skip(page * size)
@@ -49,7 +49,13 @@ async function run() {
                const result = await foodCollection.findOne(query);
                res.send(result);
           });
-
+          app.post("/allFoods", async (req, res) => {
+               const addedItems = req.body;
+               console.log(addedItems);
+               const result = await foodCollection.insertOne(addedItems);
+               res.send(result);
+          });
+       
           // Send a ping to confirm a successful connection
           await client.db("admin").command({ ping: 1 });
           console.log(
