@@ -7,7 +7,11 @@ const port = process.env.PORT || 5000;
 // middleware
 app.use(
      cors({
-          origin: ["http://localhost:5173"],
+          origin: [
+               "https://restaurant-project-d2dc8.web.app",
+               "http://localhost:5173",
+               "https://restaurant-project-d2dc8.firebaseapp.com/"
+          ],
           credentials: true,
      })
 );
@@ -27,7 +31,7 @@ const client = new MongoClient(uri, {
 async function run() {
      try {
           // Connect the client to the server	(optional starting in v4.7)
-          await client.connect();
+          // await client.connect();
           const foodCollection = client
                .db("restaurantDB")
                .collection("allFoods");
@@ -35,6 +39,28 @@ async function run() {
           const purchasedFoodCollection = client
                .db("restaurantDB")
                .collection("purchasedFoods");
+          const userCollection = client
+               .db("restaurantDB")
+               .collection("users");
+
+          // users api
+
+          app.get("/users", async (req, res) => {
+               const user = await userCollection.find().toArray();
+               res.send(user);
+          });
+
+          app.post("/users", async (req, res) => {
+               const user = req.body;
+               console.log(user);
+               const result = await userCollection.insertOne(user);
+               res.send(result);
+          });
+
+
+
+
+
           // allFoods api
           app.get("/allFoodsCount", async (req, res) => {
                const count = await foodCollection.estimatedDocumentCount();
