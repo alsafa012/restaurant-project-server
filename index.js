@@ -53,6 +53,7 @@ async function run() {
      try {
           // Connect the client to the server	(optional starting in v4.7)
           // await client.connect();
+
           const foodCollection = client
                .db("restaurantDB")
                .collection("allFoods");
@@ -78,7 +79,12 @@ async function run() {
           app.post("/logout", async (req, res) => {
                const user = req.body;
                console.log("logout user", user);
-               res.clearCookie("token", { maxAge: 0 }).send({ success: true });
+               res.clearCookie("token", {
+                    maxAge: 0,
+                    sameSite: "none",
+                    secure: true,
+               }).send({ success: true });
+               // res.clearCookie("token", { maxAge: 0 }).send({ success: true });
           });
 
           // users api
@@ -147,9 +153,24 @@ async function run() {
                );
                res.send(result);
           });
+          app.patch("/allFoods/:id", async (req, res) => {
+               const id = req.params.id;
+               const filter = { _id: new ObjectId(id) };
+               const updatedOrder = req.body;
+               const updateFood = {
+                    $set: {
+                         ordered: updatedOrder.afterOrder,
+                    },
+               };
+               const result = await foodCollection.updateOne(
+                    filter,
+                    updateFood
+               );
+               res.send(result);
+          });
 
           // purchased food
-          app.get("/purchasedFoods", verifyToken , async (req, res) => {
+          app.get("/purchasedFoods", verifyToken, async (req, res) => {
                console.log("email", req.query?.email);
                console.log("cookiesss", req.cookies);
                console.log(req.user);
