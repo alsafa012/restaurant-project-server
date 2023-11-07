@@ -100,7 +100,7 @@ async function run() {
                const count = await foodCollection.estimatedDocumentCount();
                res.send({ count });
           });
-          app.get("/allFoods",verifyToken, async (req, res) => {
+          app.get("/allFoods", async (req, res) => {
                const page = parseInt(req.query.page);
                const size = parseInt(req.query.size);
                // console.log(page, size);
@@ -151,7 +151,7 @@ async function run() {
           // purchased food
           app.get("/purchasedFoods", verifyToken , async (req, res) => {
                console.log("email", req.query?.email);
-               console.log("cookies", req.cookies);
+               console.log("cookiesss", req.cookies);
                console.log(req.user);
                // console.log("user from valid token", req.user);
                // console.log("token", req.cookies?.token);
