@@ -11,9 +11,7 @@ app.use(
      cors({
           origin: [
                "https://restaurant-project-d2dc8.web.app",
-               "http://localhost:5173",
                "https://restaurant-project-d2dc8.firebaseapp.com",
-               "http://localhost:5000",
           ],
           credentials: true,
      })
