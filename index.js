@@ -106,12 +106,28 @@ async function run() {
                const count = await foodCollection.estimatedDocumentCount();
                res.send({ count });
           });
+          // app.get("/allFoods", async (req, res) => {
+          //      const page = parseInt(req.query.page);
+          //      const size = parseInt(req.query.size);
+          //      // console.log(page, size);
+          //      const result = await foodCollection
+          //           .find()
+          //           .skip(page * size)
+          //           .limit(size)
+          //           .toArray();
+          //      res.send(result);
+          // });
           app.get("/allFoods", async (req, res) => {
                const page = parseInt(req.query.page);
                const size = parseInt(req.query.size);
                // console.log(page, size);
+               const filter = req.query;
+               // console.log(filter);
+               const query = {
+                    food_name: { $regex: new RegExp(filter.search, "i") },
+               };
                const result = await foodCollection
-                    .find()
+                    .find(query)
                     .skip(page * size)
                     .limit(size)
                     .toArray();
@@ -160,7 +176,7 @@ async function run() {
                const updateFood = {
                     $set: {
                          ordered: updatedOrder.afterOrder,
-                         quantity : updatedOrder.afterQuantity
+                         quantity: updatedOrder.afterQuantity,
                     },
                };
                const result = await foodCollection.updateOne(
