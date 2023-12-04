@@ -10,6 +10,8 @@ const port = process.env.PORT || 5000;
 app.use(
      cors({
           origin: [
+               "http://localhost:5173",
+               "http://localhost:5174",
                "https://restaurant-project-d2dc8.web.app",
                "https://restaurant-project-d2dc8.firebaseapp.com",
           ],
@@ -123,9 +125,13 @@ async function run() {
                // console.log(filter);
                const query = {
                     food_name: { $regex: new RegExp(filter.search, "i") },
+                    food_category: { $regex: new RegExp(filter.category, 'i') },
+               };
+               const options = {
+                    sort: { price: filter.sort === "asc" ? 1 : -1 },
                };
                const result = await foodCollection
-                    .find(query)
+                    .find(query, options)
                     .skip(page * size)
                     .limit(size)
                     .toArray();
@@ -184,6 +190,7 @@ async function run() {
                res.send(result);
           });
 
+          // purchased food
           // purchased food
           app.get("/purchasedFoods", verifyToken, async (req, res) => {
                console.log("email", req.query?.email);
