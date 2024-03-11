@@ -14,6 +14,7 @@ app.use(
                "http://localhost:5174",
                "https://restaurant-project-d2dc8.web.app",
                "https://restaurant-project-d2dc8.firebaseapp.com",
+               "https://restaurant-project-client.vercel.app",
           ],
           credentials: true,
      })
@@ -125,7 +126,7 @@ async function run() {
                // console.log(filter);
                const query = {
                     food_name: { $regex: new RegExp(filter.search, "i") },
-                    food_category: { $regex: new RegExp(filter.category, 'i') },
+                    food_category: { $regex: new RegExp(filter.category, "i") },
                };
                const options = {
                     sort: { price: filter.sort === "asc" ? 1 : -1 },
@@ -226,6 +227,10 @@ async function run() {
                const result = await purchasedFoodCollection.deleteOne(query);
                res.send(result);
           });
+          app.delete("/purchasedFoods", async (req, res) => {
+               const result = await purchasedFoodCollection.deleteMany({});
+               res.send(result);
+          });
 
           // Send a ping to confirm a successful connection
           await client.db("admin").command({ ping: 1 });
@@ -240,7 +245,7 @@ async function run() {
 run().catch(console.dir);
 
 app.get("/", (req, res) => {
-     res.send("restaurant server is running");
+     res.send("restaurant server is running..");
 });
 
 app.listen(port, () => {
